@@ -6,11 +6,18 @@ import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
 import TransactionDialog from "@/components/TransactionDialog";
+import MarketExpenses from "@/components/MarketExpenses";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useMarketExpenses } from "@/hooks/useMarketExpenses";
+import { cn } from "@/lib/utils";
+
+type TabKey = "thu-chi" | "di-cho";
 
 const Index = () => {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
+  const { expenses, loading: marketLoading, addExpense, updateExpense, deleteExpense, total: marketTotal } = useMarketExpenses(selectedMonth);
   const [showDialog, setShowDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("thu-chi");
 
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
@@ -53,34 +60,80 @@ const Index = () => {
             <Button variant="outline" size="icon" onClick={goNext} className="h-9 w-9">
               <ChevronRight className="h-4 w-4" />
             </Button>
+
+            {/* Tab buttons */}
+            <div className="flex ml-2 rounded-lg border border-border overflow-hidden">
+              <button
+                onClick={() => setActiveTab("thu-chi")}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium transition-colors",
+                  activeTab === "thu-chi"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Thu Chi
+              </button>
+              <button
+                onClick={() => setActiveTab("di-cho")}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium transition-colors border-l border-border",
+                  activeTab === "di-cho"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Đi Chợ
+              </button>
+            </div>
           </div>
         </div>
 
-        <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
+        {activeTab === "thu-chi" ? (
+          <>
+            <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
 
-        <Button className="w-full" onClick={() => setShowDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
-        </Button>
+            <Button className="w-full" onClick={() => setShowDialog(true)}>
+              <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
+            </Button>
 
-        <TransactionDialog
-          open={showDialog}
-          onOpenChange={setShowDialog}
-          transaction={null}
-          onSave={addTransaction}
-          onUpdate={updateTransaction}
-        />
+            <TransactionDialog
+              open={showDialog}
+              onOpenChange={setShowDialog}
+              transaction={null}
+              onSave={addTransaction}
+              onUpdate={updateTransaction}
+            />
 
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <TransactionGrid
+                transactions={transactions}
+                onAdd={addTransaction}
+                onUpdate={updateTransaction}
+                onDelete={deleteTransaction}
+              />
+            )}
+          </>
         ) : (
-          <TransactionGrid
-            transactions={transactions}
-            onAdd={addTransaction}
-            onUpdate={updateTransaction}
-            onDelete={deleteTransaction}
-          />
+          <>
+            {marketLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <MarketExpenses
+                expenses={expenses}
+                total={marketTotal}
+                onAdd={addExpense}
+                onUpdate={updateExpense}
+                onDelete={deleteExpense}
+              />
+            )}
+          </>
         )}
       </div>
     </div>
