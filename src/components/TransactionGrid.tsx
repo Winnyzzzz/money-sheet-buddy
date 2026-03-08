@@ -254,11 +254,6 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
         </table>
       </div>
 
-      <div className="p-3 border-t border-border">
-        <Button variant="ghost" className="w-full text-muted-foreground hover:text-primary" onClick={handleOpenAdd}>
-          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
-        </Button>
-      </div>
 
       <TransactionDialog
         open={dialogOpen}
