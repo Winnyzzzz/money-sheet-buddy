@@ -6,16 +6,28 @@ import type { Transaction } from "@/components/TransactionGrid";
 export function useTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+    const endMonth = month === 12 ? 1 : month + 1;
+    const endYear = month === 12 ? year + 1 : year;
+    const endDate = `${endYear}-${String(endMonth).padStart(2, "0")}-01`;
+
     const { data, error } = await supabase
       .from("transactions")
       .select("id, date, type, category, description, amount")
+      .gte("date", startDate)
+      .lt("date", endDate)
       .order("date", { ascending: false });
 
     if (error) {
-      toast.error("Failed to load transactions");
+      toast.error("Không thể tải giao dịch");
       console.error(error);
     } else {
       setTransactions(
@@ -30,7 +42,7 @@ export function useTransactions() {
       );
     }
     setLoading(false);
-  }, []);
+  }, [selectedMonth]);
 
   useEffect(() => {
     fetchTransactions();
@@ -44,21 +56,21 @@ export function useTransactions() {
       .single();
 
     if (error) {
-      toast.error("Failed to add transaction");
+      toast.error("Không thể thêm giao dịch");
       console.error(error);
     } else if (data) {
       setTransactions((prev) => [
         { ...data, type: data.type as "income" | "expense", amount: Number(data.amount) },
         ...prev,
       ]);
-      toast.success("Transaction added");
+      toast.success("Đã thêm giao dịch");
     }
   }, []);
 
   const updateTransaction = useCallback(async (id: string, updates: Partial<Omit<Transaction, "id">>) => {
     const { error } = await supabase.from("transactions").update(updates).eq("id", id);
     if (error) {
-      toast.error("Failed to update");
+      toast.error("Không thể cập nhật");
       console.error(error);
     } else {
       setTransactions((prev) =>
@@ -70,11 +82,11 @@ export function useTransactions() {
   const deleteTransaction = useCallback(async (id: string) => {
     const { error } = await supabase.from("transactions").delete().eq("id", id);
     if (error) {
-      toast.error("Failed to delete");
+      toast.error("Không thể xóa");
       console.error(error);
     } else {
       setTransactions((prev) => prev.filter((t) => t.id !== id));
-      toast.success("Transaction deleted");
+      toast.success("Đã xóa giao dịch");
     }
   }, []);
 
@@ -84,5 +96,5 @@ export function useTransactions() {
     return { totalIncome, totalExpenses, balance: totalIncome - totalExpenses };
   }, [transactions]);
 
-  return { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary };
+  return { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth };
 }
