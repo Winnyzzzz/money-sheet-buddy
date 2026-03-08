@@ -1,17 +1,58 @@
+import { useMemo } from "react";
+import { format, subMonths, addMonths } from "date-fns";
+import { vi } from "date-fns/locale";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Loader2 } from "lucide-react";
 
 const Index = () => {
-  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary } = useTransactions();
+  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
+
+  const monthDate = useMemo(() => {
+    const [y, m] = selectedMonth.split("-").map(Number);
+    return new Date(y, m - 1, 1);
+  }, [selectedMonth]);
+
+  const monthLabel = format(monthDate, "MMMM yyyy", { locale: vi });
+
+  const goPrev = () => {
+    const prev = subMonths(monthDate, 1);
+    setSelectedMonth(format(prev, "yyyy-MM"));
+  };
+
+  const goNext = () => {
+    const next = addMonths(monthDate, 1);
+    setSelectedMonth(format(next, "yyyy-MM"));
+  };
+
+  const goToday = () => {
+    const now = new Date();
+    setSelectedMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Income & Expense Tracker</h1>
-          <p className="text-muted-foreground mt-1">Track your daily transactions in one place.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Quản Lý Thu Chi</h1>
+            <p className="text-muted-foreground mt-1">Theo dõi thu nhập và chi tiêu hàng ngày.</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={goPrev} className="h-9 w-9">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <button onClick={goToday} className="text-sm font-semibold text-foreground min-w-[140px] text-center capitalize">
+              {monthLabel}
+            </button>
+            <Button variant="outline" size="icon" onClick={goNext} className="h-9 w-9">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />

@@ -6,8 +6,8 @@ interface SummaryCardsProps {
   balance: number;
 }
 
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+const formatVND = (value: number) =>
+  new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
 const SummaryCards = ({ totalIncome, totalExpenses, balance }: SummaryCardsProps) => {
   return (
@@ -17,8 +17,8 @@ const SummaryCards = ({ totalIncome, totalExpenses, balance }: SummaryCardsProps
           <TrendingUp className="h-5 w-5 text-income-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Income</p>
-          <p className="text-2xl font-bold text-income">{formatCurrency(totalIncome)}</p>
+          <p className="text-sm font-medium text-muted-foreground">Tổng Thu Nhập</p>
+          <p className="text-2xl font-bold text-income">{formatVND(totalIncome)}</p>
         </div>
       </div>
 
@@ -27,8 +27,8 @@ const SummaryCards = ({ totalIncome, totalExpenses, balance }: SummaryCardsProps
           <TrendingDown className="h-5 w-5 text-expense-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Total Expenses</p>
-          <p className="text-2xl font-bold text-expense">{formatCurrency(totalExpenses)}</p>
+          <p className="text-sm font-medium text-muted-foreground">Tổng Chi Tiêu</p>
+          <p className="text-2xl font-bold text-expense">{formatVND(totalExpenses)}</p>
         </div>
       </div>
 
@@ -37,8 +37,8 @@ const SummaryCards = ({ totalIncome, totalExpenses, balance }: SummaryCardsProps
           <Wallet className="h-5 w-5 text-balance-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Current Balance</p>
-          <p className="text-2xl font-bold text-balance">{formatCurrency(balance)}</p>
+          <p className="text-sm font-medium text-muted-foreground">Số Dư</p>
+          <p className="text-2xl font-bold text-balance">{formatVND(balance)}</p>
         </div>
       </div>
     </div>
