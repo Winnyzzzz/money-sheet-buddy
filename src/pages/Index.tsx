@@ -1,15 +1,16 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
+import TransactionDialog from "@/components/TransactionDialog";
 import { useTransactions } from "@/hooks/useTransactions";
-import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
+  const [showDialog, setShowDialog] = useState(false);
 
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
@@ -56,6 +57,18 @@ const Index = () => {
         </div>
 
         <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
+
+        <Button className="w-full" onClick={() => setShowDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
+        </Button>
+
+        <TransactionDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          transaction={null}
+          onSave={addTransaction}
+          onUpdate={updateTransaction}
+        />
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
