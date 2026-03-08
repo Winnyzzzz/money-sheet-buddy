@@ -1,12 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
+import TransactionDialog from "@/components/TransactionDialog";
 import { useTransactions } from "@/hooks/useTransactions";
-import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
