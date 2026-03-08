@@ -118,9 +118,6 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
           </div>
         ))}
 
-        <Button className="w-full" onClick={handleOpenAdd}>
-          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
-        </Button>
 
         <TransactionDialog
           open={dialogOpen}
