@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Plus, Trash2, Check, X } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import TransactionDialog from "@/components/TransactionDialog";
 
 export interface Transaction {
   id: string;
@@ -33,18 +35,12 @@ const CATEGORIES = [
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
-const emptyRow = (): Omit<Transaction, "id"> => ({
-  date: format(new Date(), "yyyy-MM-dd"),
-  type: "expense",
-  category: "",
-  description: "",
-  amount: 0,
-});
-
 const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: TransactionGridProps) => {
-  const [newRow, setNewRow] = useState<Omit<Transaction, "id"> | null>(null);
+  const isMobile = useIsMobile();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
-  const [editValue, setEditValue] = useState<string>("");
+  const [editValue, setEditValue] = useState("");
 
   const startEdit = (id: string, field: string, value: string) => {
     setEditingCell({ id, field });
@@ -61,16 +57,83 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
 
   const cancelEdit = () => setEditingCell(null);
 
-  const handleAddRow = () => {
-    if (!newRow) return;
-    if (!newRow.category || !newRow.description || newRow.amount <= 0) return;
-    onAdd(newRow);
-    setNewRow(null);
-  };
-
   const isEditing = (id: string, field: string) =>
     editingCell?.id === id && editingCell?.field === field;
 
+  const handleOpenAdd = () => {
+    setEditingTransaction(null);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (t: Transaction) => {
+    setEditingTransaction(t);
+    setDialogOpen(true);
+  };
+
+  // Mobile: card layout
+  if (isMobile) {
+    return (
+      <div className="space-y-3">
+        {transactions.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground text-sm">
+            Chưa có giao dịch nào.
+          </div>
+        )}
+
+        {transactions.map((t) => (
+          <div key={t.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(t.date), "dd/MM/yyyy", { locale: vi })}
+              </span>
+              <span className={cn(
+                "text-xs font-semibold px-2 py-0.5 rounded-full",
+                t.type === "income" ? "bg-income-light text-income" : "bg-expense-light text-expense"
+              )}>
+                {t.type === "income" ? "Thu nhập" : "Chi tiêu"}
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground truncate">{t.description || "—"}</p>
+                <p className="text-xs text-muted-foreground">{t.category}</p>
+              </div>
+              <p className={cn(
+                "text-base font-mono font-semibold whitespace-nowrap",
+                t.type === "income" ? "text-income" : "text-expense"
+              )}>
+                {t.type === "expense" ? "−" : "+"}{formatVND(t.amount)}
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-1 pt-1 border-t border-border">
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => handleOpenEdit(t)}>
+                <Pencil className="h-3 w-3 mr-1" /> Sửa
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-destructive" onClick={() => onDelete(t.id)}>
+                <Trash2 className="h-3 w-3 mr-1" /> Xóa
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        <Button className="w-full" onClick={handleOpenAdd}>
+          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
+        </Button>
+
+        <TransactionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          transaction={editingTransaction}
+          onSave={onAdd}
+          onUpdate={onUpdate}
+        />
+      </div>
+    );
+  }
+
+  // Desktop: table layout
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="overflow-x-auto">
@@ -82,7 +145,7 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
               <th className="text-left px-4 py-3 font-semibold w-[150px]">Danh mục</th>
               <th className="text-left px-4 py-3 font-semibold">Mô tả</th>
               <th className="text-right px-4 py-3 font-semibold w-[160px]">Số tiền</th>
-              <th className="px-4 py-3 w-[60px]"></th>
+              <th className="px-4 py-3 w-[80px]"></th>
             </tr>
           </thead>
           <tbody>
@@ -164,6 +227,7 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
                     <Input
                       autoFocus
                       type="number"
+                      inputMode="numeric"
                       step="1000"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
@@ -173,79 +237,39 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
                     />
                   ) : (
                     <span className={cn("cursor-text font-medium", t.type === "income" ? "text-income" : "text-expense")}>
-                      {t.type === "expense" ? "- " : "+ "}{formatVND(t.amount)}
+                      {t.type === "expense" ? "− " : "+ "}{formatVND(t.amount)}
                     </span>
                   )}
                 </td>
 
                 {/* Actions */}
-                <td className="px-4 py-2">
+                <td className="px-4 py-2 flex gap-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary" onClick={() => handleOpenEdit(t)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDelete(t.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </td>
               </tr>
             ))}
-
-            {/* New row */}
-            {newRow && (
-              <tr className="border-t border-border bg-muted/30">
-                <td className="px-4 py-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button className="text-left text-sm">{format(new Date(newRow.date), "dd/MM/yyyy", { locale: vi })}</button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={new Date(newRow.date)}
-                        onSelect={(d) => d && setNewRow({ ...newRow, date: format(d, "yyyy-MM-dd") })}
-                        className="p-3 pointer-events-auto"
-                        locale={vi}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </td>
-                <td className="px-4 py-2">
-                  <Select value={newRow.type} onValueChange={(v) => setNewRow({ ...newRow, type: v as "income" | "expense" })}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="income">Thu nhập</SelectItem>
-                      <SelectItem value="expense">Chi tiêu</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-2">
-                  <Select value={newRow.category} onValueChange={(v) => setNewRow({ ...newRow, category: v })}>
-                    <SelectTrigger className="h-8"><SelectValue placeholder="Danh mục" /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </td>
-                <td className="px-4 py-2">
-                  <Input placeholder="Mô tả" value={newRow.description} onChange={(e) => setNewRow({ ...newRow, description: e.target.value })} className="h-8" />
-                </td>
-                <td className="px-4 py-2">
-                  <Input type="number" step="1000" placeholder="0" value={newRow.amount || ""} onChange={(e) => setNewRow({ ...newRow, amount: parseFloat(e.target.value) || 0 })} className="h-8 text-right font-mono" />
-                </td>
-                <td className="px-4 py-2 flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-income" onClick={handleAddRow}><Check className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setNewRow(null)}><X className="h-4 w-4" /></Button>
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
 
-      {!newRow && (
-        <div className="p-3 border-t border-border">
-          <Button variant="ghost" className="w-full text-muted-foreground hover:text-primary" onClick={() => setNewRow(emptyRow())}>
-            <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
-          </Button>
-        </div>
-      )}
+      <div className="p-3 border-t border-border">
+        <Button variant="ghost" className="w-full text-muted-foreground hover:text-primary" onClick={handleOpenAdd}>
+          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
+        </Button>
+      </div>
+
+      <TransactionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        transaction={editingTransaction}
+        onSave={onAdd}
+        onUpdate={onUpdate}
+      />
     </div>
   );
 };
