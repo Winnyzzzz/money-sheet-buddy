@@ -10,6 +10,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 
 const Index = () => {
   const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
+  const [showDialog, setShowDialog] = useState(false);
 
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
