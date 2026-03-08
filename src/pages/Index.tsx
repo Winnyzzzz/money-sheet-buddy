@@ -57,6 +57,18 @@ const Index = () => {
 
         <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
 
+        <Button className="w-full" onClick={() => setShowDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" /> Thêm giao dịch
+        </Button>
+
+        <TransactionDialog
+          open={showDialog}
+          onOpenChange={setShowDialog}
+          transaction={null}
+          onSave={addTransaction}
+          onUpdate={updateTransaction}
+        />
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
