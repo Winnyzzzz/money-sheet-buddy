@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
@@ -18,6 +19,19 @@ const Index = () => {
   const { expenses, loading: marketLoading, addExpense, updateExpense, deleteExpense, total: marketTotal } = useMarketExpenses(selectedMonth);
   const [showDialog, setShowDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("thu-chi");
+  const [search, setSearch] = useState("");
+
+  const filteredTransactions = useMemo(() => {
+    if (!search.trim()) return transactions;
+    const q = search.toLowerCase();
+    return transactions.filter(t => t.description.toLowerCase().includes(q));
+  }, [transactions, search]);
+
+  const filteredExpenses = useMemo(() => {
+    if (!search.trim()) return expenses;
+    const q = search.toLowerCase();
+    return expenses.filter(e => e.description.toLowerCase().includes(q));
+  }, [expenses, search]);
 
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
