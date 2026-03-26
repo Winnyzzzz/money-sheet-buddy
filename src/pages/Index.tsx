@@ -33,6 +33,15 @@ const Index = () => {
     return expenses.filter(e => e.description.toLowerCase().includes(q));
   }, [expenses, search]);
 
+  const filteredTotal = useMemo(() => {
+    if (activeTab === "thu-chi") {
+      return filteredTransactions
+        .filter(t => t.type === "expense")
+        .reduce((s, t) => s + t.amount, 0);
+    }
+    return filteredExpenses.reduce((s, e) => s + e.amount, 0);
+  }, [activeTab, filteredTransactions, filteredExpenses]);
+
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
     return new Date(y, m - 1, 1);
