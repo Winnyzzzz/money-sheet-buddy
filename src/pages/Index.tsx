@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
@@ -18,6 +19,19 @@ const Index = () => {
   const { expenses, loading: marketLoading, addExpense, updateExpense, deleteExpense, total: marketTotal } = useMarketExpenses(selectedMonth);
   const [showDialog, setShowDialog] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("thu-chi");
+  const [search, setSearch] = useState("");
+
+  const filteredTransactions = useMemo(() => {
+    if (!search.trim()) return transactions;
+    const q = search.toLowerCase();
+    return transactions.filter(t => t.description.toLowerCase().includes(q));
+  }, [transactions, search]);
+
+  const filteredExpenses = useMemo(() => {
+    if (!search.trim()) return expenses;
+    const q = search.toLowerCase();
+    return expenses.filter(e => e.description.toLowerCase().includes(q));
+  }, [expenses, search]);
 
   const monthDate = useMemo(() => {
     const [y, m] = selectedMonth.split("-").map(Number);
@@ -89,6 +103,16 @@ const Index = () => {
           </div>
         </div>
 
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Tìm kiếm theo mô tả..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+
         {activeTab === "thu-chi" ? (
           <>
             <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
@@ -111,7 +135,7 @@ const Index = () => {
               </div>
             ) : (
               <TransactionGrid
-                transactions={transactions}
+                transactions={filteredTransactions}
                 onAdd={addTransaction}
                 onUpdate={updateTransaction}
                 onDelete={deleteTransaction}
@@ -126,7 +150,7 @@ const Index = () => {
               </div>
             ) : (
               <MarketExpenses
-                expenses={expenses}
+                expenses={filteredExpenses}
                 total={marketTotal}
                 onAdd={addExpense}
                 onUpdate={updateExpense}
