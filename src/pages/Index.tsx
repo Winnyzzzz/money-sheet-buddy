@@ -103,6 +103,16 @@ const Index = () => {
           </div>
         </div>
 
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Tìm kiếm theo mô tả..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
+
         {activeTab === "thu-chi" ? (
           <>
             <SummaryCards totalIncome={summary.totalIncome} totalExpenses={summary.totalExpenses} balance={summary.balance} />
@@ -125,7 +135,7 @@ const Index = () => {
               </div>
             ) : (
               <TransactionGrid
-                transactions={transactions}
+                transactions={filteredTransactions}
                 onAdd={addTransaction}
                 onUpdate={updateTransaction}
                 onDelete={deleteTransaction}
@@ -140,7 +150,7 @@ const Index = () => {
               </div>
             ) : (
               <MarketExpenses
-                expenses={expenses}
+                expenses={filteredExpenses}
                 total={marketTotal}
                 onAdd={addExpense}
                 onUpdate={updateExpense}
