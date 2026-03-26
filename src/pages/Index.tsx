@@ -112,14 +112,21 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm theo mô tả..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm kiếm theo mô tả..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          {search.trim() && (
+            <div className="shrink-0 text-sm font-semibold text-destructive whitespace-nowrap">
+              Tổng: {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(filteredTotal)}
+            </div>
+          )}
         </div>
 
         {activeTab === "thu-chi" ? (
