@@ -153,7 +153,8 @@ const Index = () => {
           </div>
           <Button variant="outline" size="icon" onClick={handleExport} title="Xuất Excel" className="h-9 w-9 shrink-0">
             <Download className="h-4 w-4" />
-          </div>
+          </Button>
+        </div>
           {search.trim() && (
             <div className="shrink-0 text-sm font-semibold text-destructive whitespace-nowrap">
               Tổng: {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(filteredTotal)}
