@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Loader2, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2, Search, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
@@ -11,6 +11,7 @@ import MarketExpenses from "@/components/MarketExpenses";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useMarketExpenses } from "@/hooks/useMarketExpenses";
 import { cn } from "@/lib/utils";
+import { exportToExcel } from "@/lib/exportExcel";
 
 type TabKey = "thu-chi" | "di-cho";
 
@@ -62,6 +63,34 @@ const Index = () => {
   const goToday = () => {
     const now = new Date();
     setSelectedMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  };
+
+  const handleExport = () => {
+    if (activeTab === "thu-chi") {
+      exportToExcel({
+        data: filteredTransactions,
+        columns: [
+          { key: "date", header: "Ngày" },
+          { key: "description", header: "Mô tả" },
+          { key: "type", header: "Loại" },
+          { key: "category", header: "Danh mục" },
+          { key: "amount", header: "Số tiền" },
+        ],
+        sheetName: "Thu Chi",
+        fileName: `thu-chi_${selectedMonth}.xlsx`,
+      });
+    } else {
+      exportToExcel({
+        data: filteredExpenses,
+        columns: [
+          { key: "date", header: "Ngày" },
+          { key: "description", header: "Mô tả" },
+          { key: "amount", header: "Số tiền" },
+        ],
+        sheetName: "Đi Chợ",
+        fileName: `di-cho_${selectedMonth}.xlsx`,
+      });
+    }
   };
 
   return (
@@ -122,6 +151,9 @@ const Index = () => {
               className="pl-9 h-9"
             />
           </div>
+          <Button variant="outline" size="icon" onClick={handleExport} title="Xuất Excel" className="h-9 w-9 shrink-0">
+            <Download className="h-4 w-4" />
+          </Button>
           {search.trim() && (
             <div className="shrink-0 text-sm font-semibold text-destructive whitespace-nowrap">
               Tổng: {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(filteredTotal)}
