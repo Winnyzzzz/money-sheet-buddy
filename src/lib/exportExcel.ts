@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 
 interface ExportOptions {
-  data: Record<string, unknown>[];
+  data: Record<string, any>[];
   columns: { key: string; header: string }[];
   sheetName: string;
   fileName: string;
