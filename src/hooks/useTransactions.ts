@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Transaction } from "@/components/TransactionGrid";
 
@@ -19,19 +18,12 @@ export function useTransactions() {
     const endYear = month === 12 ? year + 1 : year;
     const endDate = `${endYear}-${String(endMonth).padStart(2, "0")}-01`;
 
-    const { data, error } = await supabase
-      .from("transactions")
-      .select("id, date, type, category, description, amount")
-      .gte("date", startDate)
-      .lt("date", endDate)
-      .order("date", { ascending: false });
-
-    if (error) {
-      toast.error("Không thể tải giao dịch");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/transactions?start=${startDate}&end=${endDate}`);
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
       setTransactions(
-        (data || []).map((d: any) => ({
+        data.map((d: any) => ({
           id: d.id,
           date: d.date,
           type: d.type as "income" | "expense",
@@ -40,6 +32,9 @@ export function useTransactions() {
           amount: Number(d.amount),
         }))
       );
+    } catch (err) {
+      toast.error("Không thể tải giao dịch");
+      console.error(err);
     }
     setLoading(false);
   }, [selectedMonth]);
@@ -49,44 +44,55 @@ export function useTransactions() {
   }, [fetchTransactions]);
 
   const addTransaction = useCallback(async (t: Omit<Transaction, "id">) => {
-    const { data, error } = await supabase
-      .from("transactions")
-      .insert({ date: t.date, type: t.type, category: t.category, description: t.description, amount: t.amount })
-      .select("id, date, type, category, description, amount")
-      .single();
-
-    if (error) {
-      toast.error("Không thể thêm giao dịch");
-      console.error(error);
-    } else if (data) {
+    try {
+      const res = await fetch("/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(t),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
       setTransactions((prev) => [
         { ...data, type: data.type as "income" | "expense", amount: Number(data.amount) },
         ...prev,
       ]);
       toast.success("Đã thêm giao dịch");
+    } catch (err) {
+      toast.error("Không thể thêm giao dịch");
+      console.error(err);
     }
   }, []);
 
   const updateTransaction = useCallback(async (id: string, updates: Partial<Omit<Transaction, "id">>) => {
-    const { error } = await supabase.from("transactions").update(updates).eq("id", id);
-    if (error) {
-      toast.error("Không thể cập nhật");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/transactions/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error("Request failed");
       setTransactions((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, ...updates, amount: updates.amount !== undefined ? Number(updates.amount) : t.amount } : t))
+        prev.map((t) =>
+          t.id === id
+            ? { ...t, ...updates, amount: updates.amount !== undefined ? Number(updates.amount) : t.amount }
+            : t
+        )
       );
+    } catch (err) {
+      toast.error("Không thể cập nhật");
+      console.error(err);
     }
   }, []);
 
   const deleteTransaction = useCallback(async (id: string) => {
-    const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) {
-      toast.error("Không thể xóa");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Request failed");
       setTransactions((prev) => prev.filter((t) => t.id !== id));
       toast.success("Đã xóa giao dịch");
+    } catch (err) {
+      toast.error("Không thể xóa");
+      console.error(err);
     }
   }, []);
 

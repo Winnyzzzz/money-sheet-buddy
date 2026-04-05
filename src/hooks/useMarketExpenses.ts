@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export interface MarketExpense {
@@ -21,25 +20,21 @@ export function useMarketExpenses(selectedMonth: string) {
     const endYear = month === 12 ? year + 1 : year;
     const endDate = `${endYear}-${String(endMonth).padStart(2, "0")}-01`;
 
-    const { data, error } = await supabase
-      .from("market_expenses")
-      .select("id, date, description, amount")
-      .gte("date", startDate)
-      .lt("date", endDate)
-      .order("date", { ascending: false });
-
-    if (error) {
-      toast.error("Không thể tải chi tiêu đi chợ");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/market-expenses?start=${startDate}&end=${endDate}`);
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
       setExpenses(
-        (data || []).map((d: any) => ({
+        data.map((d: any) => ({
           id: d.id,
           date: d.date,
           description: d.description,
           amount: Number(d.amount),
         }))
       );
+    } catch (err) {
+      toast.error("Không thể tải chi tiêu đi chợ");
+      console.error(err);
     }
     setLoading(false);
   }, [selectedMonth]);
@@ -49,41 +44,52 @@ export function useMarketExpenses(selectedMonth: string) {
   }, [fetchExpenses]);
 
   const addExpense = useCallback(async (e: Omit<MarketExpense, "id">) => {
-    const { data, error } = await supabase
-      .from("market_expenses")
-      .insert({ date: e.date, description: e.description, amount: e.amount })
-      .select("id, date, description, amount")
-      .single();
-
-    if (error) {
-      toast.error("Không thể thêm");
-      console.error(error);
-    } else if (data) {
+    try {
+      const res = await fetch("/api/market-expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(e),
+      });
+      if (!res.ok) throw new Error("Request failed");
+      const data = await res.json();
       setExpenses((prev) => [{ ...data, amount: Number(data.amount) }, ...prev]);
       toast.success("Đã thêm");
+    } catch (err) {
+      toast.error("Không thể thêm");
+      console.error(err);
     }
   }, []);
 
   const updateExpense = useCallback(async (id: string, updates: Partial<Omit<MarketExpense, "id">>) => {
-    const { error } = await supabase.from("market_expenses").update(updates).eq("id", id);
-    if (error) {
-      toast.error("Không thể cập nhật");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/market-expenses/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error("Request failed");
       setExpenses((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...updates, amount: updates.amount !== undefined ? Number(updates.amount) : e.amount } : e))
+        prev.map((e) =>
+          e.id === id
+            ? { ...e, ...updates, amount: updates.amount !== undefined ? Number(updates.amount) : e.amount }
+            : e
+        )
       );
+    } catch (err) {
+      toast.error("Không thể cập nhật");
+      console.error(err);
     }
   }, []);
 
   const deleteExpense = useCallback(async (id: string) => {
-    const { error } = await supabase.from("market_expenses").delete().eq("id", id);
-    if (error) {
-      toast.error("Không thể xóa");
-      console.error(error);
-    } else {
+    try {
+      const res = await fetch(`/api/market-expenses/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Request failed");
       setExpenses((prev) => prev.filter((e) => e.id !== id));
       toast.success("Đã xóa");
+    } catch (err) {
+      toast.error("Không thể xóa");
+      console.error(err);
     }
   }, []);
 
