@@ -1,8 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { db } from "./db.js";
-import { transactions, marketExpenses } from "./schema.js";
-import { and, gte, lt, eq, desc } from "drizzle-orm";
+import { supabase } from "./supabase.js";
 
 const app = express();
 app.use(cors());
@@ -13,61 +11,63 @@ app.use(express.json());
 app.get("/api/transactions", async (req, res) => {
   try {
     const { start, end } = req.query as { start?: string; end?: string };
-    let rows;
-    if (start && end) {
-      rows = await db
-        .select({ id: transactions.id, date: transactions.date, type: transactions.type, category: transactions.category, description: transactions.description, amount: transactions.amount })
-        .from(transactions)
-        .where(and(gte(transactions.date, start), lt(transactions.date, end)))
-        .orderBy(desc(transactions.date));
-    } else {
-      rows = await db
-        .select({ id: transactions.id, date: transactions.date, type: transactions.type, category: transactions.category, description: transactions.description, amount: transactions.amount })
-        .from(transactions)
-        .orderBy(desc(transactions.date));
-    }
-    res.json(rows.map(r => ({ ...r, amount: Number(r.amount) })));
-  } catch (err) {
+    let query = supabase
+      .from("transactions")
+      .select("id, date, type, category, description, amount")
+      .order("date", { ascending: false });
+
+    if (start) query = query.gte("date", start);
+    if (end) query = query.lt("date", end);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json((data || []).map((r: any) => ({ ...r, amount: Number(r.amount) })));
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch transactions" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/api/transactions", async (req, res) => {
   try {
     const { date, type, category, description, amount } = req.body;
-    const [row] = await db
-      .insert(transactions)
-      .values({ date, type, category, description, amount: String(amount) })
-      .returning({ id: transactions.id, date: transactions.date, type: transactions.type, category: transactions.category, description: transactions.description, amount: transactions.amount });
-    res.json({ ...row, amount: Number(row.amount) });
-  } catch (err) {
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert({ date, type, category, description, amount })
+      .select("id, date, type, category, description, amount")
+      .single();
+    if (error) throw error;
+    res.json({ ...data, amount: Number(data.amount) });
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to create transaction" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.patch("/api/transactions/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-    if (updates.amount !== undefined) updates.amount = String(updates.amount);
-    await db.update(transactions).set(updates).where(eq(transactions.id, id));
+    const { error } = await supabase
+      .from("transactions")
+      .update(req.body)
+      .eq("id", id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to update transaction" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.delete("/api/transactions/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await db.delete(transactions).where(eq(transactions.id, id));
+    const { error } = await supabase.from("transactions").delete().eq("id", id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to delete transaction" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -76,61 +76,63 @@ app.delete("/api/transactions/:id", async (req, res) => {
 app.get("/api/market-expenses", async (req, res) => {
   try {
     const { start, end } = req.query as { start?: string; end?: string };
-    let rows;
-    if (start && end) {
-      rows = await db
-        .select({ id: marketExpenses.id, date: marketExpenses.date, description: marketExpenses.description, amount: marketExpenses.amount })
-        .from(marketExpenses)
-        .where(and(gte(marketExpenses.date, start), lt(marketExpenses.date, end)))
-        .orderBy(desc(marketExpenses.date));
-    } else {
-      rows = await db
-        .select({ id: marketExpenses.id, date: marketExpenses.date, description: marketExpenses.description, amount: marketExpenses.amount })
-        .from(marketExpenses)
-        .orderBy(desc(marketExpenses.date));
-    }
-    res.json(rows.map(r => ({ ...r, amount: Number(r.amount) })));
-  } catch (err) {
+    let query = supabase
+      .from("market_expenses")
+      .select("id, date, description, amount")
+      .order("date", { ascending: false });
+
+    if (start) query = query.gte("date", start);
+    if (end) query = query.lt("date", end);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json((data || []).map((r: any) => ({ ...r, amount: Number(r.amount) })));
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to fetch market expenses" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.post("/api/market-expenses", async (req, res) => {
   try {
     const { date, description, amount } = req.body;
-    const [row] = await db
-      .insert(marketExpenses)
-      .values({ date, description, amount: String(amount) })
-      .returning({ id: marketExpenses.id, date: marketExpenses.date, description: marketExpenses.description, amount: marketExpenses.amount });
-    res.json({ ...row, amount: Number(row.amount) });
-  } catch (err) {
+    const { data, error } = await supabase
+      .from("market_expenses")
+      .insert({ date, description, amount })
+      .select("id, date, description, amount")
+      .single();
+    if (error) throw error;
+    res.json({ ...data, amount: Number(data.amount) });
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to create market expense" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.patch("/api/market-expenses/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
-    if (updates.amount !== undefined) updates.amount = String(updates.amount);
-    await db.update(marketExpenses).set(updates).where(eq(marketExpenses.id, id));
+    const { error } = await supabase
+      .from("market_expenses")
+      .update(req.body)
+      .eq("id", id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to update market expense" });
+    res.status(500).json({ error: err.message });
   }
 });
 
 app.delete("/api/market-expenses/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await db.delete(marketExpenses).where(eq(marketExpenses.id, id));
+    const { error } = await supabase.from("market_expenses").delete().eq("id", id);
+    if (error) throw error;
     res.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: "Failed to delete market expense" });
+    res.status(500).json({ error: err.message });
   }
 });
 
