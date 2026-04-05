@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { supabase } from "./supabase.js";
+import { registerChatRoutes } from "./chat.js";
 
 const app = express();
 app.use(cors());
@@ -161,6 +162,8 @@ app.post("/api/market-expenses/batch", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+registerChatRoutes(app);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

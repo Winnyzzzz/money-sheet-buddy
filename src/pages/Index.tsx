@@ -9,6 +9,7 @@ import TransactionGrid from "@/components/TransactionGrid";
 import TransactionDialog from "@/components/TransactionDialog";
 import MarketExpenses from "@/components/MarketExpenses";
 import ImportExcelDialog from "@/components/ImportExcelDialog";
+import ChatPanel from "@/components/ChatPanel";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useMarketExpenses } from "@/hooks/useMarketExpenses";
 import { cn } from "@/lib/utils";
@@ -96,6 +97,7 @@ const Index = () => {
   };
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -227,6 +229,9 @@ const Index = () => {
         )}
       </div>
     </div>
+
+      <ChatPanel selectedMonth={selectedMonth} />
+    </>
   );
 };
 
