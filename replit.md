@@ -5,8 +5,8 @@ A Vietnamese personal finance tracker for managing income, expenses, and market 
 ## Architecture
 
 **Frontend:** React + Vite (TypeScript), Tailwind CSS, shadcn/ui components, React Router, TanStack Query  
-**Backend:** Express.js API server (TypeScript, tsx), Drizzle ORM  
-**Database:** Replit PostgreSQL  
+**Backend:** Express.js API server (TypeScript, tsx), Supabase JS client  
+**Database:** Supabase PostgreSQL (user-managed, connected via HTTPS)  
 
 ## Project Structure
 
