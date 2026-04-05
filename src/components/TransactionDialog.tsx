@@ -11,11 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Transaction } from "@/components/TransactionGrid";
-
-const CATEGORIES = [
-  "Lương", "Freelance", "Đầu tư", "Ăn uống", "Di chuyển",
-  "Tiện ích", "Giải trí", "Mua sắm", "Y tế", "Khác"
-];
+import { useCategories } from "@/lib/useCategories";
 
 interface TransactionDialogProps {
   open: boolean;
@@ -26,6 +22,7 @@ interface TransactionDialogProps {
 }
 
 const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }: TransactionDialogProps) => {
+  const { categories } = useCategories();
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("");
@@ -95,7 +92,11 @@ const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }
           {/* Type */}
           <div className="space-y-1.5">
             <Label>Loại</Label>
-            <Select value={type} onValueChange={(v) => setType(v as "income" | "expense")}>
+            <Select value={type} onValueChange={(v) => {
+              const t = v as "income" | "expense";
+              setType(t);
+              if (!categories[t].includes(category)) setCategory("");
+            }}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -114,7 +115,7 @@ const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }
                 <SelectValue placeholder="Chọn danh mục" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                {categories[type].map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

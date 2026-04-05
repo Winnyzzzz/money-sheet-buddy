@@ -27,11 +27,6 @@ interface TransactionGridProps {
   onDelete: (id: string) => void;
 }
 
-const CATEGORIES = [
-  "Lương", "Freelance", "Đầu tư", "Ăn uống", "Di chuyển",
-  "Tiện ích", "Giải trí", "Mua sắm", "Y tế", "Khác"
-];
-
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
