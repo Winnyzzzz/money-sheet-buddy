@@ -1,7 +1,11 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { supabase } from "./supabase.js";
 import { registerChatRoutes } from "./chat.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(cors());
@@ -165,7 +169,17 @@ app.post("/api/market-expenses/batch", async (req, res) => {
 
 registerChatRoutes(app);
 
-const PORT = process.env.PORT || 3001;
+// In production: serve the built Vite frontend from dist/
+if (process.env.NODE_ENV === "production") {
+  const distPath = path.join(__dirname, "..", "dist");
+  app.use(express.static(distPath));
+  // All non-API routes → index.html (SPA fallback)
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
+
+const PORT = process.env.PORT || (process.env.NODE_ENV === "production" ? 5000 : 3001);
 app.listen(PORT, () => {
-  console.log(`API server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
 });
