@@ -220,6 +220,7 @@ const Index = () => {
               <MarketExpenses
                 expenses={filteredExpenses}
                 total={marketTotal}
+                selectedMonth={selectedMonth}
                 onAdd={addExpense}
                 onUpdate={updateExpense}
                 onDelete={deleteExpense}

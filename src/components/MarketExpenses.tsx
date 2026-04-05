@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus, Trash2, Pencil, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { MarketExpense } from "@/hooks/useMarketExpenses";
+import { printMarketBill } from "@/lib/printMarketBill";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
@@ -19,12 +20,13 @@ const formatVND = (value: number) =>
 interface MarketExpensesProps {
   expenses: MarketExpense[];
   total: number;
+  selectedMonth: string;
   onAdd: (e: Omit<MarketExpense, "id">) => void;
   onUpdate: (id: string, e: Partial<Omit<MarketExpense, "id">>) => void;
   onDelete: (id: string) => void;
 }
 
-const MarketExpenses = ({ expenses, total, onAdd, onUpdate, onDelete }: MarketExpensesProps) => {
+const MarketExpenses = ({ expenses, total, selectedMonth, onAdd, onUpdate, onDelete }: MarketExpensesProps) => {
   const isMobile = useIsMobile();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<MarketExpense | null>(null);
@@ -67,6 +69,17 @@ const MarketExpenses = ({ expenses, total, onAdd, onUpdate, onDelete }: MarketEx
           <p className="text-sm font-medium text-muted-foreground">Tổng tiền chợ tháng này</p>
           <p className="text-2xl font-bold text-foreground">{formatVND(total)}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 shrink-0"
+          onClick={() => printMarketBill(expenses, selectedMonth, total)}
+          disabled={expenses.length === 0}
+          data-testid="button-print-bill"
+        >
+          <Receipt className="h-4 w-4" />
+          Tải bill
+        </Button>
       </div>
 
       <Button className="w-full" onClick={openAdd}>
