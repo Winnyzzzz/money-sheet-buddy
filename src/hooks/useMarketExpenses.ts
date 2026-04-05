@@ -95,5 +95,5 @@ export function useMarketExpenses(selectedMonth: string) {
 
   const total = useMemo(() => expenses.reduce((s, e) => s + e.amount, 0), [expenses]);
 
-  return { expenses, loading, addExpense, updateExpense, deleteExpense, total };
+  return { expenses, loading, addExpense, updateExpense, deleteExpense, total, refetch: fetchExpenses };
 }

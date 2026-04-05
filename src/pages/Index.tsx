@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { format, subMonths, addMonths } from "date-fns";
 import { vi } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Loader2, Search, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Loader2, Search, Download, Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SummaryCards from "@/components/SummaryCards";
 import TransactionGrid from "@/components/TransactionGrid";
 import TransactionDialog from "@/components/TransactionDialog";
 import MarketExpenses from "@/components/MarketExpenses";
+import ImportExcelDialog from "@/components/ImportExcelDialog";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useMarketExpenses } from "@/hooks/useMarketExpenses";
 import { cn } from "@/lib/utils";
@@ -16,9 +17,10 @@ import { exportToExcel } from "@/lib/exportExcel";
 type TabKey = "thu-chi" | "di-cho";
 
 const Index = () => {
-  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth } = useTransactions();
-  const { expenses, loading: marketLoading, addExpense, updateExpense, deleteExpense, total: marketTotal } = useMarketExpenses(selectedMonth);
+  const { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth, refetch: refetchTransactions } = useTransactions();
+  const { expenses, loading: marketLoading, addExpense, updateExpense, deleteExpense, total: marketTotal, refetch: refetchExpenses } = useMarketExpenses(selectedMonth);
   const [showDialog, setShowDialog] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("thu-chi");
   const [search, setSearch] = useState("");
 
@@ -151,6 +153,9 @@ const Index = () => {
               className="pl-9 h-9"
             />
           </div>
+          <Button variant="outline" size="icon" onClick={() => setShowImport(true)} title="Nhập từ Excel" className="h-9 w-9 shrink-0">
+            <Upload className="h-4 w-4" />
+          </Button>
           <Button variant="outline" size="icon" onClick={handleExport} title="Xuất Excel" className="h-9 w-9 shrink-0">
             <Download className="h-4 w-4" />
           </Button>
@@ -160,6 +165,19 @@ const Index = () => {
             </div>
           )}
         </div>
+
+        <ImportExcelDialog
+          open={showImport}
+          onOpenChange={setShowImport}
+          mode={activeTab}
+          onImported={() => {
+            if (activeTab === "thu-chi") {
+              refetchTransactions();
+            } else {
+              refetchExpenses();
+            }
+          }}
+        />
 
         {activeTab === "thu-chi" ? (
           <>

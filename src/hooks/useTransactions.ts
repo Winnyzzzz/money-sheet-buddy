@@ -102,5 +102,5 @@ export function useTransactions() {
     return { totalIncome, totalExpenses, balance: totalIncome - totalExpenses };
   }, [transactions]);
 
-  return { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth };
+  return { transactions, loading, addTransaction, updateTransaction, deleteTransaction, summary, selectedMonth, setSelectedMonth, refetch: fetchTransactions };
 }

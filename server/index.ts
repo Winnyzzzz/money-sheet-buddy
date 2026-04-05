@@ -71,6 +71,19 @@ app.delete("/api/transactions/:id", async (req, res) => {
   }
 });
 
+app.post("/api/transactions/batch", async (req, res) => {
+  try {
+    const { rows } = req.body as { rows: { date: string; type: string; category: string; description: string; amount: number }[] };
+    if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({ error: "No rows" });
+    const { error } = await supabase.from("transactions").insert(rows);
+    if (error) throw error;
+    res.json({ count: rows.length });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Market Expenses ───────────────────────────────────────────
 
 app.get("/api/market-expenses", async (req, res) => {
@@ -130,6 +143,19 @@ app.delete("/api/market-expenses/:id", async (req, res) => {
     const { error } = await supabase.from("market_expenses").delete().eq("id", id);
     if (error) throw error;
     res.json({ success: true });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/market-expenses/batch", async (req, res) => {
+  try {
+    const { rows } = req.body as { rows: { date: string; description: string; amount: number }[] };
+    if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({ error: "No rows" });
+    const { error } = await supabase.from("market_expenses").insert(rows);
+    if (error) throw error;
+    res.json({ count: rows.length });
   } catch (err: any) {
     console.error(err);
     res.status(500).json({ error: err.message });
