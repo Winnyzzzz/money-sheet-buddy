@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { MarketExpense } from "@/hooks/useMarketExpenses";
 import { printMarketBill } from "@/lib/printMarketBill";
+import AmountInput from "@/components/AmountInput";
 
 const formatVND = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
@@ -32,13 +33,13 @@ const MarketExpenses = ({ expenses, total, selectedMonth, onAdd, onUpdate, onDel
   const [editingExpense, setEditingExpense] = useState<MarketExpense | null>(null);
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
 
   const openAdd = () => {
     setEditingExpense(null);
     setDate(format(new Date(), "yyyy-MM-dd"));
     setDescription("");
-    setAmount("");
+    setAmount(0);
     setDialogOpen(true);
   };
 
@@ -46,17 +47,16 @@ const MarketExpenses = ({ expenses, total, selectedMonth, onAdd, onUpdate, onDel
     setEditingExpense(e);
     setDate(e.date);
     setDescription(e.description);
-    setAmount(String(e.amount));
+    setAmount(e.amount);
     setDialogOpen(true);
   };
 
   const handleSave = () => {
-    const amt = parseFloat(amount) || 0;
-    if (!description || amt <= 0) return;
+    if (!description || amount <= 0) return;
     if (editingExpense) {
-      onUpdate(editingExpense.id, { date, description, amount: amt });
+      onUpdate(editingExpense.id, { date, description, amount });
     } else {
-      onAdd({ date, description, amount: amt });
+      onAdd({ date, description, amount });
     }
     setDialogOpen(false);
   };
@@ -182,7 +182,11 @@ const MarketExpenses = ({ expenses, total, selectedMonth, onAdd, onUpdate, onDel
             </div>
             <div className="space-y-1.5">
               <Label>Số tiền (VNĐ)</Label>
-              <Input type="number" inputMode="numeric" step="1000" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-lg font-mono" />
+              <AmountInput
+                value={amount}
+                onChange={setAmount}
+                className="text-lg"
+              />
             </div>
           </div>
           <DialogFooter>

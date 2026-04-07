@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import TransactionDialog from "@/components/TransactionDialog";
+import AmountInput from "@/components/AmountInput";
 
 export interface Transaction {
   id: string;
@@ -216,13 +217,10 @@ const TransactionGrid = ({ transactions, onAdd, onUpdate, onDelete }: Transactio
                 {/* Amount */}
                 <td className="px-4 py-2 text-right font-mono" onDoubleClick={() => startEdit(t.id, "amount", String(t.amount))}>
                   {isEditing(t.id, "amount") ? (
-                    <Input
+                    <AmountInput
                       autoFocus
-                      type="number"
-                      inputMode="numeric"
-                      step="1000"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
+                      value={parseInt(editValue, 10) || 0}
+                      onChange={(n) => setEditValue(String(n))}
                       onBlur={commitEdit}
                       onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") cancelEdit(); }}
                       className="h-8 text-right"

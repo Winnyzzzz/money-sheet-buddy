@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Transaction } from "@/components/TransactionGrid";
 import { useCategories } from "@/lib/useCategories";
+import AmountInput from "@/components/AmountInput";
 
 interface TransactionDialogProps {
   open: boolean;
@@ -27,7 +28,7 @@ const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(0);
 
   useEffect(() => {
     if (transaction) {
@@ -35,21 +36,20 @@ const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }
       setType(transaction.type);
       setCategory(transaction.category);
       setDescription(transaction.description);
-      setAmount(String(transaction.amount));
+      setAmount(transaction.amount);
     } else {
       setDate(format(new Date(), "yyyy-MM-dd"));
       setType("expense");
       setCategory("");
       setDescription("");
-      setAmount("");
+      setAmount(0);
     }
   }, [transaction, open]);
 
   const handleSave = () => {
-    const amt = parseFloat(amount) || 0;
-    if (!category || !description || amt <= 0) return;
+    if (!category || !description || amount <= 0) return;
 
-    const data = { date, type, category, description, amount: amt };
+    const data = { date, type, category, description, amount };
 
     if (transaction && onUpdate) {
       onUpdate(transaction.id, data);
@@ -133,14 +133,10 @@ const TransactionDialog = ({ open, onOpenChange, transaction, onSave, onUpdate }
           {/* Amount */}
           <div className="space-y-1.5">
             <Label>Số tiền (VNĐ)</Label>
-            <Input
-              type="number"
-              inputMode="numeric"
-              step="1000"
-              placeholder="0"
+            <AmountInput
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="text-lg font-mono"
+              onChange={setAmount}
+              className="text-lg"
             />
           </div>
         </div>
